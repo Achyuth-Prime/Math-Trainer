@@ -1,14 +1,14 @@
 :root {
-  --bg-dark: #09090b;
-  --primary: #6366f1;
-  --primary-glow: rgba(99, 102, 241, 0.4);
-  --secondary: #a855f7;
-  --secondary-glow: rgba(168, 85, 247, 0.4);
-  --accent: #ec4899;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --card-bg: rgba(24, 24, 27, 0.6);
-  --card-border: rgba(255, 255, 255, 0.08);
+  --bg-dark: #050505;
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.5);
+  --secondary: #9333ea;
+  --secondary-glow: rgba(147, 51, 234, 0.5);
+  --accent: #db2777;
+  --text-main: #ffffff;
+  --text-muted: #cbd5e1;
+  --card-bg: rgba(24, 24, 27, 0.85);
+  --card-border: rgba(255, 255, 255, 0.2);
   --success: #10b981;
   --error: #ef4444;
 }
@@ -72,7 +72,7 @@ h1 {
 }
 
 .level-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--card-border);
   border-radius: 20px;
   padding: 2rem 1.5rem;
@@ -97,8 +97,8 @@ h1 {
 
 .level-card:hover {
   transform: translateY(-8px);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(79, 70, 229, 0.5);
   box-shadow: 0 20px 40px -10px var(--primary-glow);
 }
 
@@ -144,8 +144,8 @@ h1 {
   position: absolute;
   width: 64px;
   height: 64px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 30, 35, 0.85);
+  border: 1px solid var(--card-border);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -191,18 +191,18 @@ h1 {
   font-size: 3rem;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(to right, #a855f7, #ec4899);
+  background: linear-gradient(to right, var(--secondary), var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: block;
   margin-top: 0.5rem;
-  text-shadow: 0 0 40px rgba(236, 72, 153, 0.4);
+  text-shadow: 0 0 40px var(--secondary-glow);
 }
 
 .sum-input {
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
   padding: 1rem 1.5rem;
   color: white;
@@ -216,7 +216,7 @@ h1 {
 }
 
 .sum-input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
   font-size: 1.5rem;
 }
@@ -224,7 +224,7 @@ h1 {
 .sum-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 20px var(--primary-glow);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.8);
 }
 
 /* Hide number input spinners */
@@ -260,13 +260,13 @@ h1 {
 }
 
 .action-btn.secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   box-shadow: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .action-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.2);
 }
 
@@ -282,7 +282,7 @@ h1 {
   border-collapse: separate;
   border-spacing: 0;
   margin: 2rem 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -290,7 +290,7 @@ h1 {
 .summary-table th, .summary-table td {
   padding: 1.25rem 1rem;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .summary-table tr:last-child td {
@@ -299,11 +299,11 @@ h1 {
 
 .summary-table th {
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--text-main);
   font-size: 0.9rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .summary-table td {
@@ -325,10 +325,10 @@ h1 {
 
 .detail-item {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.4);
   padding: 1.5rem;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   flex-direction: column;
   justify-content: center;
