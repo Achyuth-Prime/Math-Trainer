@@ -33,23 +33,49 @@ function getStats() {
     return defaultStats;
 }
 
-function updateStats(level, newTime) {
+function updateStats(level, newTime, wrongCount = null) {
     const stats = getStats();
-    const lvlStats = stats[level] || { plays: 0, avgTime: null };
+    const lvlStats = stats[level] || { plays: 0, avgTime: null, lastWrong: 0 };
     const totalPlays = lvlStats.plays;
     const oldAvg = lvlStats.avgTime || 0;
     const newPlays = totalPlays + 1;
     const newAvg = totalPlays === 0 ? newTime : ((oldAvg * totalPlays) + newTime) / newPlays;
+    
     stats[level] = { plays: newPlays, avgTime: newAvg };
+    if (wrongCount !== null) {
+        stats[level].lastWrong = wrongCount;
+    }
+    
     localStorage.setItem('additionTrainerStats', JSON.stringify(stats));
     return { oldAvg: lvlStats.avgTime, newAvg: newAvg, plays: newPlays };
 }
 
+let appMode = 'main';
+
 function init() {
-    renderHome();
+    renderMainMenu();
 }
 
-function renderHome() {
+function renderMainMenu() {
+    appMode = 'main';
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1> Mental Math Trainer </h1>
+            <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="level-card" onclick="renderAdditionHome()">
+                    <h2>➕ Addition Trainer</h2>
+                    <p style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--text-muted);">Practice spatial addition chains</p>
+                </div>
+                <div class="level-card" onclick="renderSquaresHome()">
+                    <h2>⏹️ Squares & Cubes</h2>
+                    <p style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--text-muted);">Rapid memorization drills</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderAdditionHome() {
     const stats = getStats();
     appDiv.innerHTML = `
         <div class="glass-panel">
@@ -67,6 +93,9 @@ function renderHome() {
                         ${statText}
                     </div>
                 `}).join('')}
+            </div>
+            <div class="actions-row" style="margin-top: 3rem;">
+                <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
             </div>
         </div>
     `;
@@ -197,7 +226,8 @@ function renderCircle(nums, currentStartPoint) {
 
 function renderSummary() {
     const totalTime = results.reduce((acc, r) => acc + parseFloat(r.time), 0);
-    const { oldAvg, newAvg } = updateStats(currentLevel, totalTime);
+    const avgTimePerProblem = totalTime / results.length;
+    const { oldAvg, newAvg } = updateStats(currentLevel, avgTimePerProblem);
 
     let html = `
         <div class="glass-panel">
@@ -216,12 +246,12 @@ function renderSummary() {
 
             <div class="summary-details" style="margin-top: -1.5rem;">
                 <div class="detail-item">
-                    <div class="detail-label">Previous Avg</div>
+                    <div class="detail-label">Old Avg</div>
                     <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Total Time</div>
-                    <div class="detail-value" style="font-size: 1.8rem;">${totalTime.toFixed(2)}s</div>
+                    <div class="detail-label">This Avg</div>
+                    <div class="detail-value" style="font-size: 1.8rem;">${avgTimePerProblem.toFixed(2)}s</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">New Avg</div>
@@ -260,12 +290,192 @@ function renderSummary() {
             
             <div class="actions-row">
                 <button class="action-btn" onclick="startLevel(currentLevel)">Retry Level ${currentLevel}</button>
-                <button class="action-btn secondary" onclick="renderHome()">Main Menu</button>
+                <button class="action-btn secondary" onclick="renderAdditionHome()">Addition Menu</button>
             </div>
         </div>
     `;
     
     appDiv.innerHTML = html;
+}
+
+// ==========================================
+// SQUARES & CUBES TRAINER
+// ==========================================
+let sqMode = null;
+let sqQuestions = [];
+let sqResults = [];
+let sqWrongCount = 0;
+let sqCurrentQ = null;
+let sqQuestionStartTime = 0;
+
+function generateSquaresData() {
+    const questions = [];
+    for(let i=1; i<=40; i++) questions.push({ q: `${i}²`, a: i*i });
+    for(let i=1; i<=20; i++) questions.push({ q: `${i}³`, a: i*i*i });
+    return questions;
+}
+
+function renderSquaresHome() {
+    appMode = 'squares';
+    const stats = getStats();
+    
+    const rapStats = stats['sq_rapid'] || { plays: 0, avgTime: null, lastWrong: 0 };
+    const rapText = rapStats.plays > 0 
+        ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${rapStats.plays} | Avg/Prob: ${rapStats.avgTime.toFixed(2)}s <br> Last Wrongs: ${rapStats.lastWrong || 0}</p>`
+        : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+
+    const absStats = stats['sq_absolute'] || { plays: 0, avgTime: null, lastWrong: 0 };
+    const absText = absStats.plays > 0 
+        ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${absStats.plays} | Avg/Prob: ${absStats.avgTime.toFixed(2)}s <br> Last Wrongs: ${absStats.lastWrong || 0}</p>`
+        : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1> Squares & Cubes </h1>
+            <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="level-card" onclick="startSquaresLevel('rapid')">
+                    <h2>Rapid (10 Qs)</h2>
+                    <p>Random sample</p>
+                    ${rapText}
+                </div>
+                <div class="level-card" onclick="startSquaresLevel('absolute')">
+                    <h2>Absolute (60 Qs)</h2>
+                    <p>All squares (1-40) and cubes (1-20)</p>
+                    ${absText}
+                </div>
+            </div>
+            <div class="actions-row" style="margin-top: 3rem;">
+                <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+function startSquaresLevel(mode) {
+    sqMode = mode;
+    sqWrongCount = 0;
+    sqResults = [];
+
+    let pool = generateSquaresData();
+    pool = shuffle(pool);
+    
+    if(mode === 'rapid') {
+        sqQuestions = pool.slice(0, 10);
+    } else {
+        sqQuestions = pool;
+    }
+    
+    renderSquaresGame();
+}
+
+function renderSquaresGame() {
+    if (sqQuestions.length === 0) {
+        renderSquaresSummary();
+        return;
+    }
+    
+    sqCurrentQ = sqQuestions.shift();
+    
+    appDiv.innerHTML = `
+        <div class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+            <h2>${sqMode === 'rapid' ? 'Rapid' : 'Absolute'} Mode - ${sqQuestions.length + 1} remaining</h2>
+            
+            <div style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${sqCurrentQ.q} = ?</div>
+            
+            <div class="input-section">
+                <form id="sq-answer-form">
+                    <input type="number" id="sq-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
+                    <br>
+                    <button type="submit" class="submit-btn" id="submit-btn">Submit Answer</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const form = document.getElementById('sq-answer-form');
+    const input = document.getElementById('sq-input');
+    
+    setTimeout(() => {
+        input.focus();
+        sqQuestionStartTime = performance.now();
+    }, 100);
+
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        const endTime = performance.now();
+        const t = ((endTime - sqQuestionStartTime) / 1000);
+        const answer = parseInt(input.value);
+        
+        if (answer === sqCurrentQ.a) {
+            sqResults.push(t);
+            renderSquaresGame(); 
+        } else {
+            sqWrongCount++;
+            sqQuestions.push(sqCurrentQ); // Re-queue at the end
+            showSquaresFeedback(sqCurrentQ.q, sqCurrentQ.a);
+        }
+    };
+}
+
+function showSquaresFeedback(q, a) {
+    appDiv.innerHTML = `
+        <div class="glass-panel game-container" style="border-color: var(--error); box-shadow: 0 0 30px rgba(255,0,0,0.3);">
+            <h2 style="color: var(--error); font-size: 2rem;">Incorrect!</h2>
+            <div style="font-size: 5rem; font-weight: bold; margin: 3rem 0; color: var(--text-main);">
+                ${q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${a}</span>
+            </div>
+            <p style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem;">Memorize it. We'll ask you this again later.</p>
+            <button class="submit-btn" id="got-it-btn" onclick="renderSquaresGame()">Got it!</button>
+        </div>
+    `;
+    setTimeout(() => {
+        document.getElementById('got-it-btn').focus();
+    }, 100);
+}
+
+function renderSquaresSummary() {
+    const totalTime = sqResults.reduce((a, b) => a + b, 0);
+    // sqResults only records successful answers, so length equals number of questions solved correctly
+    const avgTimePerProblem = totalTime / sqResults.length;
+    const statKey = `sq_${sqMode}`;
+    const { oldAvg, newAvg } = updateStats(statKey, avgTimePerProblem, sqWrongCount);
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1>${sqMode === 'rapid' ? 'Rapid' : 'Absolute'} Summary</h1>
+            
+            <div class="summary-details">
+                <div class="detail-item">
+                    <div class="detail-label">Questions Solved</div>
+                    <div class="detail-value text-success">${sqResults.length}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Mistakes Made</div>
+                    <div class="detail-value text-error">${sqWrongCount}</div>
+                </div>
+            </div>
+            
+            <div class="summary-details" style="margin-top: -1.5rem;">
+                <div class="detail-item">
+                    <div class="detail-label">Old Avg/Prob</div>
+                    <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">This Avg/Prob</div>
+                    <div class="detail-value" style="font-size: 1.8rem;">${avgTimePerProblem.toFixed(2)}s</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">New Avg/Prob</div>
+                    <div class="detail-value" style="color: var(--primary); font-size: 1.8rem;">${newAvg.toFixed(2)}s</div>
+                </div>
+            </div>
+            
+            <div class="actions-row">
+                <button class="action-btn" onclick="startSquaresLevel('${sqMode}')">Retry</button>
+                <button class="action-btn secondary" onclick="renderSquaresHome()">Squares Menu</button>
+            </div>
+        </div>
+    `;
 }
 
 // Start app
