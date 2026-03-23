@@ -27,9 +27,9 @@ body {
 
 #app {
   width: 100%;
-  max-width: 850px;
-  min-height: 600px;
-  padding: 2rem;
+  max-width: 1000px;
+  min-height: 750px;
+  padding: 2.5rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -39,15 +39,15 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 20px;
-  padding: 3rem;
+  padding: 4rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 h1 {
   text-align: center;
-  font-size: 3rem;
+  font-size: 4rem;
   margin-top: 0;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   color: #fff;
   font-weight: 500;
   letter-spacing: -1px;
@@ -55,15 +55,15 @@ h1 {
 
 .level-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
 .level-card {
   background: #151E32;
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 2rem;
   cursor: pointer;
   text-align: center;
   transition: all 0.3s ease;
@@ -78,7 +78,7 @@ h1 {
 
 .level-card h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
+  font-size: 2rem;
   color: #fff;
   font-weight: 500;
 }
@@ -86,7 +86,7 @@ h1 {
 .level-card p {
   margin: 0;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 .game-container {
@@ -97,30 +97,30 @@ h1 {
 
 .game-container h2 {
   color: var(--text-muted);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 400;
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .circle-container {
   position: relative;
-  width: 320px;
-  height: 320px;
-  margin: 3rem auto;
+  width: 450px;
+  height: 450px;
+  margin: 4rem auto;
 }
 
 .number-orb {
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   background: #1E293B;
   border: 1px solid var(--border-color);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.25rem;
+  font-size: 2rem;
   color: var(--text-main);
   transform: translate(-50%, -50%);
   transition: all 0.4s ease;
@@ -137,18 +137,18 @@ h1 {
 
 .input-section {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 2rem;
   width: 100%;
 }
 
 .input-section p {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .start-point-highlight {
-  font-size: 3rem;
+  font-size: 4.5rem;
   font-weight: 600;
   color: var(--primary);
   display: block;
@@ -160,10 +160,10 @@ h1 {
   background: #0B0E14;
   border: 2px solid var(--border-color);
   border-radius: 12px;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 2rem;
   color: #fff;
-  font-size: 2rem;
-  width: 240px;
+  font-size: 2.5rem;
+  width: 320px;
   text-align: center;
   outline: none;
   font-weight: 600;
@@ -180,12 +180,12 @@ h1 {
   background: var(--primary);
   border: none;
   border-radius: 12px;
-  padding: 1.2rem 2.5rem;
+  padding: 1.5rem 3rem;
   color: #0B0E14;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   transition: all 0.2s;
 }
 
@@ -215,7 +215,7 @@ h1 {
 .summary-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 2rem 0;
+  margin: 3rem 0;
   background: #151E32;
   border-radius: 12px;
   overflow: hidden;
@@ -223,9 +223,10 @@ h1 {
 }
 
 .summary-table th, .summary-table td {
-  padding: 1.25rem 1rem;
+  padding: 1.5rem 1.25rem;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
+  font-size: 1.2rem;
 }
 
 .summary-table tr:last-child td {
@@ -235,7 +236,7 @@ h1 {
 .summary-table th {
   font-weight: 500;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 1rem;
   text-transform: uppercase;
   background: #0B0E14;
 }
@@ -245,14 +246,14 @@ h1 {
 
 .summary-details {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 2rem;
+  margin-bottom: 3rem;
 }
 
 .detail-item {
   flex: 1;
   background: #151E32;
-  padding: 1.5rem;
+  padding: 2rem;
   border-radius: 16px;
   border: 1px solid var(--border-color);
   display: flex;
@@ -262,14 +263,14 @@ h1 {
 }
 
 .detail-label {
-  font-size: 0.875rem;
+  font-size: 1.2rem;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   text-transform: uppercase;
 }
 
 .detail-value {
-  font-size: 1.75rem;
+  font-size: 2.5rem;
   color: #fff;
   text-align: center;
   word-break: break-all;
