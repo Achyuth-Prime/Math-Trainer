@@ -136,6 +136,8 @@ function renderCircle(nums, currentStartPoint) {
     // Radius in percentage to scale automatically with container size
     const radiusPercent = 40.625; 
     
+    let highlighted = false;
+    
     nums.forEach((num, index) => {
         const angle = (index / n) * 2 * Math.PI - Math.PI / 2; // Start from top
         
@@ -149,8 +151,9 @@ function renderCircle(nums, currentStartPoint) {
         orb.style.top = `${yPercent}%`;
         orb.innerText = num;
         
-        if (num === currentStartPoint) {
+        if (num === currentStartPoint && !highlighted) {
             orb.classList.add('highlighted');
+            highlighted = true;
         }
         
         container.appendChild(orb);
