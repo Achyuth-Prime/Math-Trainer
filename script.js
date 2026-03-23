@@ -64,11 +64,9 @@ function renderMainMenu() {
             <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
                 <div class="level-card" onclick="renderAdditionHome()">
                     <h2>➕ Addition Trainer</h2>
-                    <p style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--text-muted);">Practice spatial addition chains</p>
                 </div>
                 <div class="level-card" onclick="renderSquaresHome()">
-                    <h2>⏹️ Squares & Cubes</h2>
-                    <p style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--text-muted);">Rapid memorization drills</p>
+                    <h2>⏹️ Squares & Cubes Trainer</h2>
                 </div>
             </div>
         </div>
@@ -308,9 +306,14 @@ let sqWrongCount = 0;
 let sqCurrentQ = null;
 let sqQuestionStartTime = 0;
 
-function generateSquaresData() {
+function getSquaresData() {
     const questions = [];
     for(let i=1; i<=40; i++) questions.push({ q: `${i}²`, a: i*i });
+    return questions;
+}
+
+function getCubesData() {
+    const questions = [];
     for(let i=1; i<=20; i++) questions.push({ q: `${i}³`, a: i*i*i });
     return questions;
 }
@@ -319,30 +322,30 @@ function renderSquaresHome() {
     appMode = 'squares';
     const stats = getStats();
     
-    const rapStats = stats['sq_rapid'] || { plays: 0, avgTime: null, lastWrong: 0 };
-    const rapText = rapStats.plays > 0 
-        ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${rapStats.plays} | Avg/Prob: ${rapStats.avgTime.toFixed(2)}s <br> Last Wrongs: ${rapStats.lastWrong || 0}</p>`
-        : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
-
-    const absStats = stats['sq_absolute'] || { plays: 0, avgTime: null, lastWrong: 0 };
-    const absText = absStats.plays > 0 
-        ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${absStats.plays} | Avg/Prob: ${absStats.avgTime.toFixed(2)}s <br> Last Wrongs: ${absStats.lastWrong || 0}</p>`
-        : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+    function createStatCard(modeId, title, desc) {
+        const s = stats[`sq_${modeId}`] || { plays: 0, avgTime: null, lastWrong: 0 };
+        const text = s.plays > 0 
+            ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${s.plays} | Avg: ${s.avgTime.toFixed(2)}s <br> PIA: ${s.lastWrong || 0}</p>`
+            : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+        return `
+            <div class="level-card" onclick="startSquaresLevel('${modeId}')">
+                <h2>${title}</h2>
+                <p>${desc}</p>
+                ${text}
+            </div>
+        `;
+    }
 
     appDiv.innerHTML = `
         <div class="glass-panel">
             <h1> Squares & Cubes </h1>
             <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                <div class="level-card" onclick="startSquaresLevel('rapid')">
-                    <h2>Rapid (10 Qs)</h2>
-                    <p>Random sample</p>
-                    ${rapText}
-                </div>
-                <div class="level-card" onclick="startSquaresLevel('absolute')">
-                    <h2>Absolute (60 Qs)</h2>
-                    <p>All squares (1-40) and cubes (1-20)</p>
-                    ${absText}
-                </div>
+                ${createStatCard('rapid', 'Rapid (10 Qs)', 'Random Sample')}
+                ${createStatCard('absolute', 'Absolute (60 Qs)', 'All Squares & Cubes')}
+                ${createStatCard('sq_rand', 'Squares Random', 'Squares 1-40 (Shuffled)')}
+                ${createStatCard('sq_ord', 'Squares Ordered', 'Squares 1-40 (In Order)')}
+                ${createStatCard('cb_rand', 'Cubes Random', 'Cubes 1-20 (Shuffled)')}
+                ${createStatCard('cb_ord', 'Cubes Ordered', 'Cubes 1-20 (In Order)')}
             </div>
             <div class="actions-row" style="margin-top: 3rem;">
                 <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
@@ -356,13 +359,23 @@ function startSquaresLevel(mode) {
     sqWrongCount = 0;
     sqResults = [];
 
-    let pool = generateSquaresData();
-    pool = shuffle(pool);
+    const squares = getSquaresData();
+    const cubes = getCubesData();
     
-    if(mode === 'rapid') {
-        sqQuestions = pool.slice(0, 10);
-    } else {
-        sqQuestions = pool;
+    if (mode === 'rapid') {
+        let pool = squares.concat(cubes);
+        sqQuestions = shuffle(pool).slice(0, 10);
+    } else if (mode === 'absolute') {
+        let pool = squares.concat(cubes);
+        sqQuestions = shuffle(pool);
+    } else if (mode === 'sq_rand') {
+        sqQuestions = shuffle([...squares]);
+    } else if (mode === 'sq_ord') {
+        sqQuestions = [...squares];
+    } else if (mode === 'cb_rand') {
+        sqQuestions = shuffle([...cubes]);
+    } else if (mode === 'cb_ord') {
+        sqQuestions = [...cubes];
     }
     
     renderSquaresGame();
@@ -376,9 +389,15 @@ function renderSquaresGame() {
     
     sqCurrentQ = sqQuestions.shift();
     
+    const modeNames = {
+        'rapid': 'Rapid', 'absolute': 'Absolute', 'sq_rand': 'Squares Random',
+        'sq_ord': 'Squares Ordered', 'cb_rand': 'Cubes Random', 'cb_ord': 'Cubes Ordered'
+    };
+    const modeTitle = modeNames[sqMode] || 'Trainer';
+
     appDiv.innerHTML = `
         <div class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-            <h2>${sqMode === 'rapid' ? 'Rapid' : 'Absolute'} Mode - ${sqQuestions.length + 1} remaining</h2>
+            <h2>${modeTitle} Mode - ${sqQuestions.length + 1} remaining</h2>
             
             <div style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${sqCurrentQ.q} = ?</div>
             
@@ -440,9 +459,15 @@ function renderSquaresSummary() {
     const statKey = `sq_${sqMode}`;
     const { oldAvg, newAvg } = updateStats(statKey, avgTimePerProblem, sqWrongCount);
 
+    const modeNames = {
+        'rapid': 'Rapid', 'absolute': 'Absolute', 'sq_rand': 'Squares Random',
+        'sq_ord': 'Squares Ordered', 'cb_rand': 'Cubes Random', 'cb_ord': 'Cubes Ordered'
+    };
+    const modeTitle = modeNames[sqMode] || 'Trainer';
+
     appDiv.innerHTML = `
         <div class="glass-panel">
-            <h1>${sqMode === 'rapid' ? 'Rapid' : 'Absolute'} Summary</h1>
+            <h1>${modeTitle} Summary</h1>
             
             <div class="summary-details">
                 <div class="detail-item">
@@ -457,15 +482,15 @@ function renderSquaresSummary() {
             
             <div class="summary-details" style="margin-top: -1.5rem;">
                 <div class="detail-item">
-                    <div class="detail-label">Old Avg/Prob</div>
+                    <div class="detail-label">Old Avg</div>
                     <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">This Avg/Prob</div>
+                    <div class="detail-label">This Avg</div>
                     <div class="detail-value" style="font-size: 1.8rem;">${avgTimePerProblem.toFixed(2)}s</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">New Avg/Prob</div>
+                    <div class="detail-label">New Avg</div>
                     <div class="detail-value" style="color: var(--primary); font-size: 1.8rem;">${newAvg.toFixed(2)}s</div>
                 </div>
             </div>
