@@ -26,8 +26,8 @@ body {
 
 #app {
   width: 100%;
-  max-width: 1200px;
-  min-height: 85vh;
+  max-width: 1000px;
+  min-height: 75vh;
   padding: 2rem;
   box-sizing: border-box;
   display: flex;
@@ -78,7 +78,7 @@ h1 {
 
 .level-card h2 {
   margin: 0 0 0.75rem 0;
-  font-size: 2.2rem;
+  font-size: 2rem;
   color: var(--neon-cyan);
   text-shadow: 0 0 10px var(--neon-cyan);
   text-transform: uppercase;
@@ -101,20 +101,20 @@ h1 {
   text-shadow: 0 0 10px var(--neon-yellow);
   margin-top: 0;
   margin-bottom: 1rem;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
 }
 
 .circle-container {
   position: relative;
-  width: 480px;
-  height: 480px;
+  width: 400px;
+  height: 400px;
   margin: 4rem auto;
 }
 
 .number-orb {
   position: absolute;
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   background: #000;
   border: 2px solid var(--neon-cyan);
   border-radius: 50%;
@@ -122,7 +122,7 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: bold;
   color: var(--neon-cyan);
   text-shadow: 0 0 5px var(--neon-cyan);
@@ -146,13 +146,13 @@ h1 {
 }
 
 .input-section p {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   color: #fff;
   margin-bottom: 1.5rem;
 }
 
 .start-point-highlight {
-  font-size: 4.5rem;
+  font-size: 3.5rem;
   font-weight: bold;
   color: var(--neon-yellow);
   text-shadow: 0 0 15px var(--neon-yellow), 0 0 30px var(--neon-yellow);
@@ -164,10 +164,10 @@ h1 {
   background: #000;
   border: 2px solid var(--neon-cyan);
   border-radius: 10px;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   color: var(--neon-cyan);
   font-size: 3rem;
-  width: 350px;
+  width: 300px;
   text-align: center;
   outline: none;
   font-family: inherit;
@@ -186,8 +186,8 @@ h1 {
   border: 2px solid var(--neon-pink);
   border-radius: 10px;
   color: var(--neon-pink);
-  padding: 1.5rem 3rem;
-  font-size: 1.5rem;
+  padding: 1.2rem 2.5rem;
+  font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   margin-top: 2rem;
@@ -237,10 +237,10 @@ h1 {
 }
 
 .summary-table th, .summary-table td {
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
   text-align: center;
   border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
 }
 
 .summary-table th {
@@ -280,7 +280,7 @@ h1 {
 }
 
 .detail-label {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: var(--neon-cyan);
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -288,7 +288,7 @@ h1 {
 }
 
 .detail-value {
-  font-size: 2.8rem;
+  font-size: 2.5rem;
   color: #fff;
   text-align: center;
   word-break: break-all;
@@ -304,25 +304,25 @@ h1 {
     padding: 1.5rem;
   }
   h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   .circle-container {
-    width: 320px;
-    height: 320px;
+    width: 300px;
+    height: 300px;
     margin: 2rem auto;
   }
   .number-orb {
-    width: 64px;
-    height: 64px;
-    font-size: 1.5rem;
+    width: 55px;
+    height: 55px;
+    font-size: 1.3rem;
   }
   .start-point-highlight {
-    font-size: 3rem;
+    font-size: 2.6rem;
   }
   .sum-input {
     width: 100%;
-    max-width: 250px;
-    font-size: 2rem;
+    max-width: 200px;
+    font-size: 1.5rem;
   }
   .actions-row {
     flex-direction: column;
