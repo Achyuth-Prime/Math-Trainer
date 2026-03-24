@@ -146,50 +146,56 @@ function renderGame() {
     }
 
     const currentStartPoint = startPoints[currentStartPointIndex];
+    let gameUI = document.getElementById('add-game-ui');
     
-    appDiv.innerHTML = `
-        <div class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-            <h2>Level ${currentLevel} - Round ${currentStartPointIndex + 1} / ${startPoints.length}</h2>
-            
-            <div class="circle-container" id="circle-container"></div>
-            
-            <div class="input-section">
-                <p>Begin adding from: <span class="start-point-highlight">${currentStartPoint}</span></p>
-                <form id="answer-form">
-                    <input type="number" id="sum-input" class="sum-input" autocomplete="off" autofocus required placeholder="Total sum?">
-                    <br>
-                    <button type="submit" class="submit-btn" id="submit-btn">Submit Answer</button>
-                </form>
+    if (!gameUI) {
+        appDiv.innerHTML = `
+            <div id="add-game-ui" class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <h2 id="add-header">Level ${currentLevel} - Round ${currentStartPointIndex + 1} / ${startPoints.length}</h2>
+                <div class="circle-container" id="circle-container"></div>
+                <div class="input-section">
+                    <p>Begin adding from: <span id="add-start-point" class="start-point-highlight">${currentStartPoint}</span></p>
+                    <form id="answer-form">
+                        <input type="number" id="sum-input" class="sum-input" autocomplete="off" autofocus required placeholder="Total sum?">
+                        <br>
+                        <button type="submit" class="submit-btn" id="submit-btn">Submit Answer</button>
+                    </form>
+                </div>
             </div>
-        </div>
-    `;
+        `;
+        
+        const form = document.getElementById('answer-form');
+        const input = document.getElementById('sum-input');
+        
+        setTimeout(() => {
+            input.focus();
+            startTime = performance.now();
+        }, 100);
 
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const endTime = performance.now();
+            const answer = parseInt(input.value);
+            
+            results.push({
+                startPoint: startPoints[currentStartPointIndex],
+                userAnswer: answer,
+                correct: answer === correctSum,
+                time: ((endTime - startTime) / 1000).toFixed(2)
+            });
+            
+            currentStartPointIndex++;
+            input.value = ''; // clear input, keep focus
+            startTime = performance.now(); // reset timer
+            renderGame();
+        };
+    } else {
+        document.getElementById('add-header').innerText = `Level ${currentLevel} - Round ${currentStartPointIndex + 1} / ${startPoints.length}`;
+        document.getElementById('add-start-point').innerText = currentStartPoint;
+    }
+
+    document.getElementById('circle-container').innerHTML = '';
     renderCircle(numbers, currentStartPoint);
-    
-    const form = document.getElementById('answer-form');
-    const input = document.getElementById('sum-input');
-    
-    // Slight timeout before starting timer
-    setTimeout(() => {
-        input.focus();
-        startTime = performance.now();
-    }, 100);
-
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        const endTime = performance.now();
-        const answer = parseInt(input.value);
-        
-        results.push({
-            startPoint: currentStartPoint,
-            userAnswer: answer,
-            correct: answer === correctSum,
-            time: ((endTime - startTime) / 1000).toFixed(2)
-        });
-        
-        currentStartPointIndex++;
-        renderGame();
-    };
 }
 
 function renderCircle(nums, currentStartPoint) {
@@ -381,13 +387,17 @@ function startSquaresLevel(mode) {
     renderSquaresGame();
 }
 
+let sqIsReviewing = false;
+
 function renderSquaresGame() {
     if (sqQuestions.length === 0) {
         renderSquaresSummary();
         return;
     }
     
-    sqCurrentQ = sqQuestions.shift();
+    if (!sqIsReviewing) {
+        sqCurrentQ = sqQuestions.shift();
+    }
     
     const modeNames = {
         'rapid': 'Rapid', 'absolute': 'Absolute', 'sq_rand': 'Squares Random',
@@ -395,61 +405,88 @@ function renderSquaresGame() {
     };
     const modeTitle = modeNames[sqMode] || 'Trainer';
 
-    appDiv.innerHTML = `
-        <div class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-            <h2>${modeTitle} Mode - ${sqQuestions.length + 1} remaining</h2>
-            
-            <div style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${sqCurrentQ.q} = ?</div>
-            
-            <div class="input-section">
-                <form id="sq-answer-form">
-                    <input type="number" id="sq-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
-                    <br>
-                    <button type="submit" class="submit-btn" id="submit-btn">Submit Answer</button>
-                </form>
-            </div>
-        </div>
-    `;
-    
-    const form = document.getElementById('sq-answer-form');
-    const input = document.getElementById('sq-input');
-    
-    setTimeout(() => {
-        input.focus();
-        sqQuestionStartTime = performance.now();
-    }, 100);
+    let gameUI = document.getElementById('sq-game-ui');
 
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        const endTime = performance.now();
-        const t = ((endTime - sqQuestionStartTime) / 1000);
-        const answer = parseInt(input.value);
+    if (!gameUI) {
+        appDiv.innerHTML = `
+            <div id="sq-game-ui" class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <h2 id="sq-header">${modeTitle} Mode - ${sqQuestions.length + 1} remaining</h2>
+                
+                <div id="sq-question" style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${sqCurrentQ.q} = ?</div>
+                
+                <div class="input-section">
+                    <p id="sq-feedback-text" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem; display: none;">Memorize it. We'll ask you this again later.</p>
+                    <form id="sq-answer-form">
+                        <input type="number" id="sq-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
+                        <br>
+                        <button type="submit" class="submit-btn" id="sq-submit-btn">Submit Answer</button>
+                    </form>
+                </div>
+            </div>
+        `;
         
-        if (answer === sqCurrentQ.a) {
-            sqResults.push(t);
-            renderSquaresGame(); 
-        } else {
-            sqWrongCount++;
-            sqQuestions.push(sqCurrentQ); // Re-queue at the end
-            showSquaresFeedback(sqCurrentQ.q, sqCurrentQ.a);
-        }
-    };
-}
+        const form = document.getElementById('sq-answer-form');
+        const input = document.getElementById('sq-input');
+        
+        setTimeout(() => {
+            input.focus();
+            sqQuestionStartTime = performance.now();
+        }, 100);
 
-function showSquaresFeedback(q, a) {
-    appDiv.innerHTML = `
-        <div class="glass-panel game-container" style="border-color: var(--error); box-shadow: 0 0 30px rgba(255,0,0,0.3);">
-            <h2 style="color: var(--error); font-size: 2rem;">Incorrect!</h2>
-            <div style="font-size: 5rem; font-weight: bold; margin: 3rem 0; color: var(--text-main);">
-                ${q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${a}</span>
-            </div>
-            <p style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem;">Memorize it. We'll ask you this again later.</p>
-            <button class="submit-btn" id="got-it-btn" onclick="renderSquaresGame()">Got it!</button>
-        </div>
-    `;
-    setTimeout(() => {
-        document.getElementById('got-it-btn').focus();
-    }, 100);
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const inputEl = document.getElementById('sq-input');
+            const qEl = document.getElementById('sq-question');
+            const btnEl = document.getElementById('sq-submit-btn');
+            const fbEl = document.getElementById('sq-feedback-text');
+            const containerEl = document.getElementById('sq-game-ui');
+            
+            if (sqIsReviewing) {
+                sqIsReviewing = false;
+                inputEl.value = '';
+                btnEl.innerText = 'Submit Answer';
+                fbEl.style.display = 'none';
+                
+                containerEl.style.borderColor = '';
+                containerEl.style.boxShadow = '';
+                qEl.style.color = '';
+                qEl.style.textShadow = '';
+                
+                sqQuestionStartTime = performance.now();
+                renderSquaresGame(); 
+                return;
+            }
+
+            const endTime = performance.now();
+            const t = ((endTime - sqQuestionStartTime) / 1000);
+            const answer = parseInt(inputEl.value);
+            
+            if (answer === sqCurrentQ.a) {
+                sqResults.push(t);
+                inputEl.value = '';
+                sqQuestionStartTime = performance.now();
+                renderSquaresGame(); 
+            } else {
+                sqWrongCount++;
+                sqQuestions.push(sqCurrentQ); // Re-queue at the end
+                
+                sqIsReviewing = true;
+                containerEl.style.borderColor = 'var(--error)';
+                containerEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.3)';
+                
+                qEl.innerHTML = `${sqCurrentQ.q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${sqCurrentQ.a}</span>`;
+                
+                fbEl.style.display = 'block';
+                inputEl.value = ''; 
+                btnEl.innerText = 'Got it! (Press Enter)';
+            }
+        };
+    } else {
+        if (!sqIsReviewing) {
+            document.getElementById('sq-header').innerText = `${modeTitle} Mode - ${sqQuestions.length + 1} remaining`;
+            document.getElementById('sq-question').innerText = `${sqCurrentQ.q} = ?`;
+        }
+    }
 }
 
 function renderSquaresSummary() {
