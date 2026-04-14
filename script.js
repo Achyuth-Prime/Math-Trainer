@@ -71,6 +71,15 @@ function renderMainMenu() {
                 <div class="level-card" onclick="renderFactorialsHome()">
                     <h2>❗ Factorials Trainer</h2>
                 </div>
+                <div class="level-card" onclick="renderTablesHome()">
+                    <h2>✖️ Tables Trainer</h2>
+                </div>
+                <div class="level-card" onclick="renderSquareRootsHome()">
+                    <h2>🧮 Square Roots Trainer</h2>
+                </div>
+                <div class="level-card" onclick="renderPowersHome()">
+                    <h2>🔼 Powers Trainer</h2>
+                </div>
             </div>
         </div>
     `;
@@ -748,6 +757,738 @@ function renderFactorialsSummary() {
             <div class="actions-row">
                 <button class="action-btn" onclick="startFactorialsLevel('${fcMode}')">Retry</button>
                 <button class="action-btn secondary" onclick="renderFactorialsHome()">Factorials Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+// ==========================================
+// TABLES TRAINER
+// ==========================================
+let tbMode = null;
+let tbQuestions = [];
+let tbResults = [];
+let tbWrongCount = 0;
+let tbCurrentQ = null;
+let tbQuestionStartTime = 0;
+let tbIsReviewing = false;
+
+function getTablesData(num) {
+    const questions = [];
+    for (let i = 2; i <= 9; i++) {
+        questions.push({ q: `${num} × ${i}`, a: num * i });
+    }
+    return questions;
+}
+
+function getRandomTablesData() {
+    const questions = [];
+    for (let i = 12; i <= 19; i++) {
+        for (let j = 2; j <= 9; j++) {
+            questions.push({ q: `${i} × ${j}`, a: i * j });
+        }
+    }
+    return questions;
+}
+
+function renderTablesHome() {
+    appMode = 'tables';
+    const stats = getStats();
+    
+    function createStatCard(modeId, title, desc, colSpan = false) {
+        const s = stats[`tb_${modeId}`] || { plays: 0, avgTime: null, lastWrong: 0 };
+        const text = s.plays > 0 
+            ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${s.plays} | Avg: ${s.avgTime.toFixed(2)}s <br> PIA: ${s.lastWrong || 0}</p>`
+            : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+        const extraStyle = colSpan ? 'grid-column: 1 / -1;' : '';
+        return `
+            <div class="level-card" style="${extraStyle}" onclick="startTablesLevel('${modeId}')">
+                <h2>${title}</h2>
+                ${text}
+            </div>
+        `;
+    }
+
+    let tablesCards = '';
+    for (let i = 12; i <= 19; i++) {
+        tablesCards += createStatCard(`${i}_ord`, `${i} - Ordered`, `Table of ${i} in order`);
+        tablesCards += createStatCard(`${i}_rand`, `${i} - Random`, `Table of ${i} shuffled`);
+    }
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1> Tables Trainer </h1>
+            <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                ${createStatCard('rand_10', 'Random 10', '')}
+                ${createStatCard('rand_20', 'Random 20', '')}
+                ${tablesCards}
+            </div>
+            <div class="actions-row" style="margin-top: 3rem;">
+                <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+function startTablesLevel(mode) {
+    tbMode = mode;
+    tbWrongCount = 0;
+    tbResults = [];
+    tbIsReviewing = false;
+
+    if (mode === 'rand_10') {
+        tbQuestions = shuffle(getRandomTablesData()).slice(0, 10);
+    } else if (mode === 'rand_20') {
+        tbQuestions = shuffle(getRandomTablesData()).slice(0, 20);
+    } else {
+        // format is 11_ord or 11_rand
+        const parts = mode.split('_');
+        const num = parseInt(parts[0]);
+        const style = parts[1];
+        const data = getTablesData(num);
+        if (style === 'rand') {
+            tbQuestions = shuffle(data);
+        } else {
+            tbQuestions = data;
+        }
+    }
+    
+    renderTablesGame();
+}
+
+function renderTablesGame() {
+    if (tbQuestions.length === 0) {
+        renderTablesSummary();
+        return;
+    }
+    
+    if (!tbIsReviewing) {
+        tbCurrentQ = tbQuestions.shift();
+    }
+    
+    let modeTitle = 'Tables Trainer';
+    if (tbMode === 'rand_10') modeTitle = 'Random 10';
+    else if (tbMode === 'rand_20') modeTitle = 'Random 20';
+    else {
+        const parts = tbMode.split('_');
+        if (parts.length === 2) {
+            modeTitle = `Table of ${parts[0]} (${parts[1] === 'ord' ? 'Ordered' : 'Random'})`;
+        }
+    }
+
+    let gameUI = document.getElementById('tb-game-ui');
+
+    if (!gameUI) {
+        appDiv.innerHTML = `
+            <div id="tb-game-ui" class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <h2 id="tb-header">${modeTitle} - ${tbQuestions.length + 1} remaining</h2>
+                
+                <div id="tb-question" style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${tbCurrentQ.q} = ?</div>
+                
+                <div class="input-section">
+                    <p id="tb-feedback-text" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem; display: none;">Memorize it. We'll ask you this again later.</p>
+                    <form id="tb-answer-form">
+                        <input type="number" id="tb-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
+                        <br>
+                        <button type="submit" class="submit-btn" id="tb-submit-btn">Submit Answer</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        const form = document.getElementById('tb-answer-form');
+        const input = document.getElementById('tb-input');
+        
+        setTimeout(() => {
+            input.focus();
+            tbQuestionStartTime = performance.now();
+        }, 100);
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const inputEl = document.getElementById('tb-input');
+            const qEl = document.getElementById('tb-question');
+            const btnEl = document.getElementById('tb-submit-btn');
+            const fbEl = document.getElementById('tb-feedback-text');
+            const containerEl = document.getElementById('tb-game-ui');
+            
+            if (tbIsReviewing) {
+                tbIsReviewing = false;
+                inputEl.value = '';
+                btnEl.innerText = 'Submit Answer';
+                fbEl.style.display = 'none';
+                
+                containerEl.style.borderColor = '';
+                containerEl.style.boxShadow = '';
+                qEl.style.color = '';
+                qEl.style.textShadow = '';
+                
+                tbQuestionStartTime = performance.now();
+                renderTablesGame(); 
+                return;
+            }
+
+            const endTime = performance.now();
+            const t = ((endTime - tbQuestionStartTime) / 1000);
+            const answer = parseInt(inputEl.value);
+            
+            if (answer === tbCurrentQ.a) {
+                tbResults.push(t);
+                inputEl.value = '';
+                tbQuestionStartTime = performance.now();
+                renderTablesGame(); 
+            } else {
+                tbWrongCount++;
+                tbQuestions.push(tbCurrentQ); // Re-queue at the end
+                
+                tbIsReviewing = true;
+                containerEl.style.borderColor = 'var(--error)';
+                containerEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.3)';
+                
+                qEl.innerHTML = `${tbCurrentQ.q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${tbCurrentQ.a}</span>`;
+                
+                fbEl.style.display = 'block';
+                inputEl.value = ''; 
+                btnEl.innerText = 'Got it! (Press Enter)';
+            }
+        };
+    } else {
+        if (!tbIsReviewing) {
+            document.getElementById('tb-header').innerText = `${modeTitle} - ${tbQuestions.length + 1} remaining`;
+            document.getElementById('tb-question').innerText = `${tbCurrentQ.q} = ?`;
+        }
+    }
+}
+
+function renderTablesSummary() {
+    const totalTime = tbResults.reduce((a, b) => a + b, 0);
+    const statKey = `tb_${tbMode}`;
+    const { oldAvg, newAvg } = updateStats(statKey, totalTime, tbWrongCount);
+
+    let modeTitle = 'Tables Trainer';
+    if (tbMode === 'rand_10') modeTitle = 'Random 10';
+    else if (tbMode === 'rand_20') modeTitle = 'Random 20';
+    else {
+        const parts = tbMode.split('_');
+        if (parts.length === 2) {
+            modeTitle = `Table of ${parts[0]} (${parts[1] === 'ord' ? 'Ordered' : 'Random'})`;
+        }
+    }
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1>${modeTitle} Summary</h1>
+            
+            <div class="summary-details">
+                <div class="detail-item">
+                    <div class="detail-label">Questions Solved</div>
+                    <div class="detail-value text-success">${tbResults.length}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Mistakes Made</div>
+                    <div class="detail-value text-error">${tbWrongCount}</div>
+                </div>
+            </div>
+            
+            <div class="summary-details" style="margin-top: -1.5rem;">
+                <div class="detail-item">
+                    <div class="detail-label">Old Avg</div>
+                    <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">This Round Time</div>
+                    <div class="detail-value" style="font-size: 1.8rem;">${totalTime.toFixed(2)}s</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">New Avg</div>
+                    <div class="detail-value" style="color: var(--primary); font-size: 1.8rem;">${newAvg.toFixed(2)}s</div>
+                </div>
+            </div>
+            
+            <div class="actions-row">
+                <button class="action-btn" onclick="startTablesLevel('${tbMode}')">Retry</button>
+                <button class="action-btn secondary" onclick="renderTablesHome()">Tables Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+// ==========================================
+// SQUARE ROOTS TRAINER
+// ==========================================
+let srMode = null;
+let srQuestions = [];
+let srResults = [];
+let srWrongCount = 0;
+let srCurrentQ = null;
+let srQuestionStartTime = 0;
+let srIsReviewing = false;
+
+function getSquareRootsData() {
+    return [
+        { q: '√2', a: '1.41' },
+        { q: '√3', a: '1.73' },
+        { q: '√4', a: '2' },
+        { q: '√5', a: '2.24' },
+        { q: '√6', a: '2.45' },
+        { q: '√7', a: '2.65' },
+        { q: '√8', a: '2.83' },
+        { q: '√9', a: '3' },
+        { q: '√10', a: '3.16' },
+        { q: '√11', a: '3.32' },
+        { q: '√12', a: '3.46' },
+        { q: '√13', a: '3.61' },
+        { q: '√14', a: '3.74' },
+        { q: '√15', a: '3.87' },
+        { q: '√16', a: '4' }
+    ];
+}
+
+function renderSquareRootsHome() {
+    appMode = 'squareroots';
+    const stats = getStats();
+    
+    function createStatCard(modeId, title, desc) {
+        const s = stats[`sr_${modeId}`] || { plays: 0, avgTime: null, lastWrong: 0 };
+        const text = s.plays > 0 
+            ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${s.plays} | Avg: ${s.avgTime.toFixed(2)}s <br> PIA: ${s.lastWrong || 0}</p>`
+            : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+        return `
+            <div class="level-card" onclick="startSquareRootsLevel('${modeId}')">
+                <h2>${title}</h2>
+                <p>${desc}</p>
+                ${text}
+            </div>
+        `;
+    }
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1> Square Roots Trainer </h1>
+            <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                ${createStatCard('ord', 'Square Roots In Order', '')}
+                ${createStatCard('rand', 'Square Roots Shuffled', '')}
+            </div>
+            <div class="actions-row" style="margin-top: 3rem;">
+                <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+function startSquareRootsLevel(mode) {
+    srMode = mode;
+    srWrongCount = 0;
+    srResults = [];
+    srIsReviewing = false;
+
+    const data = getSquareRootsData();
+    if (mode === 'rand') {
+        srQuestions = shuffle([...data]);
+    } else {
+        srQuestions = [...data];
+    }
+    
+    renderSquareRootsGame();
+}
+
+function renderSquareRootsGame() {
+    if (srQuestions.length === 0) {
+        renderSquareRootsSummary();
+        return;
+    }
+    
+    if (!srIsReviewing) {
+        srCurrentQ = srQuestions.shift();
+    }
+    
+    const modeTitle = srMode === 'ord' ? 'Square Roots Scheduled' : 'Square Roots Random';
+
+    let gameUI = document.getElementById('sr-game-ui');
+
+    if (!gameUI) {
+        appDiv.innerHTML = `
+            <div id="sr-game-ui" class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <h2 id="sr-header">${modeTitle} - ${srQuestions.length + 1} remaining</h2>
+                
+                <div id="sr-question" style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${srCurrentQ.q} = ?</div>
+                
+                <div class="input-section">
+                    <p id="sr-feedback-text" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem; display: none;">Memorize it. We'll ask you this again later.</p>
+                    <form id="sr-answer-form">
+                        <input type="number" step="any" id="sr-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
+                        <br>
+                        <button type="submit" class="submit-btn" id="sr-submit-btn">Submit Answer</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        const form = document.getElementById('sr-answer-form');
+        const input = document.getElementById('sr-input');
+        
+        setTimeout(() => {
+            input.focus();
+            srQuestionStartTime = performance.now();
+        }, 100);
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const inputEl = document.getElementById('sr-input');
+            const qEl = document.getElementById('sr-question');
+            const btnEl = document.getElementById('sr-submit-btn');
+            const fbEl = document.getElementById('sr-feedback-text');
+            const containerEl = document.getElementById('sr-game-ui');
+            
+            if (srIsReviewing) {
+                srIsReviewing = false;
+                inputEl.value = '';
+                btnEl.innerText = 'Submit Answer';
+                fbEl.style.display = 'none';
+                
+                containerEl.style.borderColor = '';
+                containerEl.style.boxShadow = '';
+                qEl.style.color = '';
+                qEl.style.textShadow = '';
+                
+                srQuestionStartTime = performance.now();
+                renderSquareRootsGame(); 
+                return;
+            }
+
+            const endTime = performance.now();
+            const t = ((endTime - srQuestionStartTime) / 1000);
+            const answer = inputEl.value.trim(); // Handle as string
+            
+            if (answer === srCurrentQ.a) {
+                srResults.push(t);
+                inputEl.value = '';
+                srQuestionStartTime = performance.now();
+                renderSquareRootsGame(); 
+            } else {
+                srWrongCount++;
+                srQuestions.push(srCurrentQ); // Re-queue at the end
+                
+                srIsReviewing = true;
+                containerEl.style.borderColor = 'var(--error)';
+                containerEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.3)';
+                
+                qEl.innerHTML = `${srCurrentQ.q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${srCurrentQ.a}</span>`;
+                
+                fbEl.style.display = 'block';
+                inputEl.value = ''; 
+                btnEl.innerText = 'Got it! (Press Enter)';
+            }
+        };
+    } else {
+        if (!srIsReviewing) {
+            document.getElementById('sr-header').innerText = `${modeTitle} - ${srQuestions.length + 1} remaining`;
+            document.getElementById('sr-question').innerText = `${srCurrentQ.q} = ?`;
+        }
+    }
+}
+
+function renderSquareRootsSummary() {
+    const totalTime = srResults.reduce((a, b) => a + b, 0);
+    const statKey = `sr_${srMode}`;
+    const { oldAvg, newAvg } = updateStats(statKey, totalTime, srWrongCount);
+
+    const modeTitle = srMode === 'ord' ? 'Square Roots Scheduled' : 'Square Roots Random';
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1>${modeTitle} Summary</h1>
+            
+            <div class="summary-details">
+                <div class="detail-item">
+                    <div class="detail-label">Questions Solved</div>
+                    <div class="detail-value text-success">${srResults.length}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Mistakes Made</div>
+                    <div class="detail-value text-error">${srWrongCount}</div>
+                </div>
+            </div>
+            
+            <div class="summary-details" style="margin-top: -1.5rem;">
+                <div class="detail-item">
+                    <div class="detail-label">Old Avg</div>
+                    <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">This Round Time</div>
+                    <div class="detail-value" style="font-size: 1.8rem;">${totalTime.toFixed(2)}s</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">New Avg</div>
+                    <div class="detail-value" style="color: var(--primary); font-size: 1.8rem;">${newAvg.toFixed(2)}s</div>
+                </div>
+            </div>
+            
+            <div class="actions-row">
+                <button class="action-btn" onclick="startSquareRootsLevel('${srMode}')">Retry</button>
+                <button class="action-btn secondary" onclick="renderSquareRootsHome()">Square Roots Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+// ==========================================
+// POWERS TRAINER
+// ==========================================
+let pwMode = null;
+let pwQuestions = [];
+let pwResults = [];
+let pwWrongCount = 0;
+let pwCurrentQ = null;
+let pwQuestionStartTime = 0;
+let pwIsReviewing = false;
+
+function getPowersData(type) {
+    const questions = [];
+    if (type === '2') {
+        for (let i = 4; i <= 10; i++) questions.push({ q: `2<sup>${i}</sup>`, a: Math.pow(2, i) });
+    } else if (type === '3') {
+        for (let i = 4; i <= 8; i++) questions.push({ q: `3<sup>${i}</sup>`, a: Math.pow(3, i) });
+    } else if (type === '4') {
+        for (let i = 4; i <= 6; i++) questions.push({ q: `4<sup>${i}</sup>`, a: Math.pow(4, i) });
+    } else if (type === '5') {
+        for (let i = 4; i <= 6; i++) questions.push({ q: `5<sup>${i}</sup>`, a: Math.pow(5, i) });
+    } else if (type === 'others') {
+        for (let i = 6; i <= 9; i++) questions.push({ q: `${i}<sup>4</sup>`, a: Math.pow(i, 4) });
+    }
+    return questions;
+}
+
+function getAllPowersData() {
+    return [
+        ...getPowersData('2'), ...getPowersData('3'), ...getPowersData('4'),
+        ...getPowersData('5'), ...getPowersData('others')
+    ];
+}
+
+function renderPowersHome() {
+    appMode = 'powers';
+    const stats = getStats();
+    
+    function createStatCard(modeId, title, desc, colSpan = false) {
+        const s = stats[`pw_${modeId}`] || { plays: 0, avgTime: null, lastWrong: 0 };
+        const text = s.plays > 0 
+            ? `<p style="color: var(--primary); font-weight: bold; margin-top: 0.5rem; font-size: 1rem;">Played: ${s.plays} | Avg: ${s.avgTime.toFixed(2)}s <br> PIA: ${s.lastWrong || 0}</p>`
+            : `<p style="color: grey; font-size: 1rem; margin-top: 0.5rem;">Not played yet</p>`;
+        const extraStyle = colSpan ? 'grid-column: 1 / -1;' : '';
+        return `
+            <div class="level-card" style="${extraStyle}" onclick="startPowersLevel('${modeId}')">
+                <h2>${title}</h2>
+                <p>${desc}</p>
+                ${text}
+            </div>
+        `;
+    }
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1> Powers Trainer </h1>
+            <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                ${createStatCard('rand_10', 'Random 10', '')}
+                ${createStatCard('rand_20', 'Random 20', '')}
+                ${createStatCard('2_ord', 'Ordered Powers of 2', '')}
+                ${createStatCard('2_rand', 'Random Powers of 2', '')}
+                ${createStatCard('3_ord', 'Ordered Powers of 3', '')}
+                ${createStatCard('3_rand', 'Random Powers of 3', '')}
+                ${createStatCard('4_ord', 'Ordered Powers of 4', '')}
+                ${createStatCard('4_rand', 'Random Powers of 4', '')}
+                ${createStatCard('5_ord', 'Ordered Powers of 5', '')}
+                ${createStatCard('5_rand', 'Random Powers of 5', '')}
+                ${createStatCard('others_ord', 'Ordered Other powers', '')}
+                ${createStatCard('others_rand', 'Random Other powers', '')}
+            </div>
+            <div class="actions-row" style="margin-top: 3rem;">
+                <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
+            </div>
+        </div>
+    `;
+}
+
+function startPowersLevel(mode) {
+    pwMode = mode;
+    pwWrongCount = 0;
+    pwResults = [];
+    pwIsReviewing = false;
+
+    if (mode === 'rand_10') {
+        pwQuestions = shuffle(getAllPowersData()).slice(0, 10);
+    } else if (mode === 'rand_20') {
+        pwQuestions = shuffle(getAllPowersData()).slice(0, 20);
+    } else {
+        const parts = mode.split('_');
+        const type = parts[0];
+        const style = parts[1];
+        const data = getPowersData(type);
+        if (style === 'rand') {
+            pwQuestions = shuffle(data);
+        } else {
+            pwQuestions = data;
+        }
+    }
+    
+    renderPowersGame();
+}
+
+function renderPowersGame() {
+    if (pwQuestions.length === 0) {
+        renderPowersSummary();
+        return;
+    }
+    
+    if (!pwIsReviewing) {
+        pwCurrentQ = pwQuestions.shift();
+    }
+    
+    let modeTitle = 'Powers Trainer';
+    if (pwMode === 'rand_10') modeTitle = 'Random 10';
+    else if (pwMode === 'rand_20') modeTitle = 'Random 20';
+    else {
+        const parts = pwMode.split('_');
+        if (parts.length === 2) {
+            const tMap = { '2': 'Powers of 2', '3': 'Powers of 3', '4': 'Powers of 4', '5': 'Powers of 5', 'others': 'Other powers of 4' };
+            modeTitle = `${tMap[parts[0]]} (${parts[1] === 'ord' ? 'Ordered' : 'Random'})`;
+        }
+    }
+
+    let gameUI = document.getElementById('pw-game-ui');
+
+    if (!gameUI) {
+        appDiv.innerHTML = `
+            <div id="pw-game-ui" class="glass-panel game-container" style="animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                <h2 id="pw-header">${modeTitle} - ${pwQuestions.length + 1} remaining</h2>
+                
+                <div id="pw-question" style="font-size: 6rem; font-weight: bold; margin: 3rem 0; color: var(--text-main); text-shadow: 0 0 20px var(--primary-glow);">${pwCurrentQ.q} = ?</div>
+                
+                <div class="input-section">
+                    <p id="pw-feedback-text" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 2rem; display: none;">Memorize it. We'll ask you this again later.</p>
+                    <form id="pw-answer-form">
+                        <input type="number" id="pw-input" class="sum-input" autocomplete="off" autofocus required placeholder="Answer">
+                        <br>
+                        <button type="submit" class="submit-btn" id="pw-submit-btn">Submit Answer</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        const form = document.getElementById('pw-answer-form');
+        const input = document.getElementById('pw-input');
+        
+        setTimeout(() => {
+            input.focus();
+            pwQuestionStartTime = performance.now();
+        }, 100);
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const inputEl = document.getElementById('pw-input');
+            const qEl = document.getElementById('pw-question');
+            const btnEl = document.getElementById('pw-submit-btn');
+            const fbEl = document.getElementById('pw-feedback-text');
+            const containerEl = document.getElementById('pw-game-ui');
+            
+            if (pwIsReviewing) {
+                pwIsReviewing = false;
+                inputEl.value = '';
+                btnEl.innerText = 'Submit Answer';
+                fbEl.style.display = 'none';
+                
+                containerEl.style.borderColor = '';
+                containerEl.style.boxShadow = '';
+                qEl.style.color = '';
+                qEl.style.textShadow = '';
+                
+                pwQuestionStartTime = performance.now();
+                renderPowersGame(); 
+                return;
+            }
+
+            const endTime = performance.now();
+            const t = ((endTime - pwQuestionStartTime) / 1000);
+            const answer = parseInt(inputEl.value);
+            
+            if (answer === pwCurrentQ.a) {
+                pwResults.push(t);
+                inputEl.value = '';
+                pwQuestionStartTime = performance.now();
+                renderPowersGame(); 
+            } else {
+                pwWrongCount++;
+                pwQuestions.push(pwCurrentQ); // Re-queue at the end
+                
+                pwIsReviewing = true;
+                containerEl.style.borderColor = 'var(--error)';
+                containerEl.style.boxShadow = '0 0 30px rgba(255,0,0,0.3)';
+                
+                qEl.innerHTML = `${pwCurrentQ.q} = <span style="color: var(--success); text-shadow: 0 0 20px var(--success);">${pwCurrentQ.a}</span>`;
+                
+                fbEl.style.display = 'block';
+                inputEl.value = ''; 
+                btnEl.innerText = 'Got it! (Press Enter)';
+            }
+        };
+    } else {
+        if (!pwIsReviewing) {
+            document.getElementById('pw-header').innerText = `${modeTitle} - ${pwQuestions.length + 1} remaining`;
+            document.getElementById('pw-question').innerHTML = `${pwCurrentQ.q} = ?`;
+        }
+    }
+}
+
+function renderPowersSummary() {
+    const totalTime = pwResults.reduce((a, b) => a + b, 0);
+    const statKey = `pw_${pwMode}`;
+    const { oldAvg, newAvg } = updateStats(statKey, totalTime, pwWrongCount);
+
+    let modeTitle = 'Powers Trainer';
+    if (pwMode === 'rand_10') modeTitle = 'Random 10';
+    else if (pwMode === 'rand_20') modeTitle = 'Random 20';
+    else {
+        const parts = pwMode.split('_');
+        if (parts.length === 2) {
+            const tMap = { '2': 'Powers of 2', '3': 'Powers of 3', '4': 'Powers of 4', '5': 'Powers of 5', 'others': 'Other powers of 4' };
+            modeTitle = `${tMap[parts[0]]} (${parts[1] === 'ord' ? 'Ordered' : 'Random'})`;
+        }
+    }
+
+    appDiv.innerHTML = `
+        <div class="glass-panel">
+            <h1>${modeTitle} Summary</h1>
+            
+            <div class="summary-details">
+                <div class="detail-item">
+                    <div class="detail-label">Questions Solved</div>
+                    <div class="detail-value text-success">${pwResults.length}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Mistakes Made</div>
+                    <div class="detail-value text-error">${pwWrongCount}</div>
+                </div>
+            </div>
+            
+            <div class="summary-details" style="margin-top: -1.5rem;">
+                <div class="detail-item">
+                    <div class="detail-label">Old Avg</div>
+                    <div class="detail-value" style="color: var(--text-muted); font-size: 1.8rem;">${oldAvg ? oldAvg.toFixed(2) + 's' : '---'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">This Round Time</div>
+                    <div class="detail-value" style="font-size: 1.8rem;">${totalTime.toFixed(2)}s</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">New Avg</div>
+                    <div class="detail-value" style="color: var(--primary); font-size: 1.8rem;">${newAvg.toFixed(2)}s</div>
+                </div>
+            </div>
+            
+            <div class="actions-row">
+                <button class="action-btn" onclick="startPowersLevel('${pwMode}')">Retry</button>
+                <button class="action-btn secondary" onclick="renderPowersHome()">Powers Menu</button>
             </div>
         </div>
     `;
