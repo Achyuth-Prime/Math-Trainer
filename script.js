@@ -332,7 +332,7 @@ function getSquaresData() {
 
 function getCubesData() {
     const questions = [];
-    for(let i=1; i<=20; i++) questions.push({ q: `${i}³`, a: i*i*i });
+    for(let i=1; i<=30; i++) questions.push({ q: `${i}³`, a: i*i*i });
     return questions;
 }
 
@@ -359,11 +359,11 @@ function renderSquaresHome() {
             <h1> Squares & Cubes </h1>
             <div class="level-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
                 ${createStatCard('rapid', 'Rapid (10 Qs)', 'Random Sample')}
-                ${createStatCard('absolute', 'Absolute (60 Qs)', 'All Squares & Cubes')}
+                ${createStatCard('absolute', 'Absolute (70 Qs)', 'All Squares & Cubes')}
                 ${createStatCard('sq_ord', 'Squares Ordered', 'Squares 1-40 (In Order)')}
                 ${createStatCard('sq_rand', 'Squares Random', 'Squares 1-40 (Shuffled)')}
-                ${createStatCard('cb_ord', 'Cubes Ordered', 'Cubes 1-20 (In Order)')}
-                ${createStatCard('cb_rand', 'Cubes Random', 'Cubes 1-20 (Shuffled)')}
+                ${createStatCard('cb_ord', 'Cubes Ordered', 'Cubes 1-30 (In Order)')}
+                ${createStatCard('cb_rand', 'Cubes Random', 'Cubes 1-30 (Shuffled)')}
             </div>
             <div class="actions-row" style="margin-top: 3rem;">
                 <button class="action-btn secondary" onclick="renderMainMenu()">Main Menu</button>
